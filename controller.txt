@@ -1,0 +1,197 @@
+package com.nathan.todolist;
+
+import com.nathan.todolist.datamodel.ToDoItem;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
+import javafx.util.Callback;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+
+public class Controller {
+
+    private List<ToDoItem> toDoItems;
+
+    @FXML
+    private ListView<ToDoItem> toDoListView;   //Note that ListView specifies a generic item type as ToDoItem
+    @FXML
+    private TextArea itemDetailsTextArea;
+    @FXML
+    private Label deadlineLabel;
+    @FXML
+    private BorderPane mainBorderPane;
+    @FXML
+    private ContextMenu listContextMenu;
+
+    //the initialize method is analagous to the Constructor in a normal Java class.
+    public void initialize() {
+
+        listContextMenu = new ContextMenu();   //creating a new Context Menu  //Why is this necessary? Not initialized in fxml sine no fx:id???
+        MenuItem deleteMenuItem = new MenuItem("Delete");    //Creating a new MenuItem to put in the Context Menu
+        deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                ToDoItem item = toDoListView.getSelectionModel().getSelectedItem();
+                deleteItem(item); //the deleteItem method is written down below in Controller
+            }
+        });
+
+        listContextMenu.getItems().addAll(deleteMenuItem);  //this code adds the Delete option to the context menu
+
+        toDoListView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<ToDoItem>() {
+            @Override
+            public void changed(ObservableValue<? extends ToDoItem> observableValue, ToDoItem oldValue, ToDoItem newValue) {
+                if(newValue != null){
+                    ToDoItem item = toDoListView.getSelectionModel().getSelectedItem();
+                    itemDetailsTextArea.setText(item.getDetails());
+                    DateTimeFormatter df = DateTimeFormatter.ofPattern("MMMM d, YYYY");
+                    deadlineLabel.setText(df.format(item.getDeadLine()));
+                }
+            }
+        });
+
+        //***this code links the Controller FX file with thte ToDoData class and instance
+        //toDoListView is the fx:id for ListView in the fxml file
+//        toDoListView.getItems().setAll(ToDoData.getInstance().getToDoItems());  //populates ListView with the items contained in toDoItems
+        toDoListView.setItems(ToDoData.getInstance().getToDoItems());   //change the above line of code to this line after changing List to ObservableList
+        //setItems(ObservableList<T> value) is a method of ListView class; it sets the underlying data model for ListView; T is the type of items in the o.l. being set
+        //this setItems() method is used to "bind the observableList in the ToDoData class to the ListView
+        //Note:toDoListView is the FX:ID for our ListView established in mainwindow.fxml
+        toDoListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //assures we can only select one item at a time
+        toDoListView.getSelectionModel().selectFirst();
+
+        //what is being done here is pass an anonymous class that implements the CallBack interface
+        toDoListView.setCellFactory(new Callback<ListView<ToDoItem>, ListCell<ToDoItem>>() {   //The Callback method is the method used to paint each cell in the ListView
+            @Override
+            public ListCell<ToDoItem> call(ListView<ToDoItem> toDoItemListView) {
+
+                ListCell<ToDoItem> cell = new ListCell<ToDoItem>() {   //from this line on is code done by the developer; creating a new ListCell
+                    @Override    //hold down CTRL + O to override the updateItem method (there are quite a few other methods you can use here)
+                    protected void updateItem(ToDoItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if(empty) {
+                            setText(null);
+                        } else {
+                            setText(item.getShortDescription());
+                            if (item.getDeadLine().isBefore(LocalDate.now().plusDays(1))) {
+                                setTextFill(Color.RED);
+                            } else if (item.getDeadLine().equals(LocalDate.now().plusDays(1))){
+                                setTextFill(Color.GREEN);
+                            }
+                        }
+                    }
+                };
+                //the code below here is used to link our Context menu to the CellFactory and by default
+                //to the ListMenu. This code is our first example of a lambda expression
+                cell.emptyProperty().addListener (
+                        (obs, wasEmpty, isNowEmpty) -> {
+                            if(isNowEmpty) {
+                                cell.setContextMenu(null);
+                            } else {
+                                cell.setContextMenu(listContextMenu);
+                            }
+
+                        });
+
+                return cell;
+            }
+        });
+    }
+
+    @FXML
+    public void showNewItemDialog() {   //this code initializes, loads and assigns the dialog pane
+        Dialog<ButtonType> dialog = new Dialog<>();   //creates a instance of Dialog
+        dialog.initOwner(mainBorderPane.getScene().getWindow());    //initializes a new dialog window (assigns the "owner" i.e. specifies the main window from which it is opened)
+        FXMLLoader fxmlLoader = new FXMLLoader();   //creates a new instance of FXMLLoader
+        fxmlLoader.setLocation(getClass().getResource("todoItemDialog.fxml"));    //sets the web location of the dialogPane (in the form of a URL)
+        try {
+//            Parent root = FXMLLoader.load(getClass().getResource("todoItemDialog.fxml"));
+            dialog.getDialogPane().setContent(fxmlLoader.load());   //calling the load method from fxmlLoader instance defined above the try block; this code loads the dialogPane
+        } catch (IOException e) {
+            System.out.println("Couldn't load the dialog.");
+            e.printStackTrace();
+            return;
+        }
+
+
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.setTitle("Add new ToDoItem");
+        dialog.setHeaderText("Use this dialog to create a new ToDoItem");
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            DialogController controller = fxmlLoader.getController();
+            ToDoItem newItem = controller.processResults();    //this code calls the processResults method defined in the DialogController file (which now returns a ToDoItem)
+//            toDoListView.getItems().setAll(ToDoData.getInstance().getToDoItems());  //recall that toDoListView is the FX:ID for our ListView; getToDoItems = a list of ToDoItems
+            //deleting the above line of code after changing List to ObservableList; it is not needed as the line of code in initialize() above accomplishes the same thing
+            toDoListView.getSelectionModel().select(newItem);  //selects the newItem returned from the processResults() method
+        }
+    }
+
+    //ListView Methods
+    //getItems(): returns an ObservableList that contains the items currently being shown to the user
+
+    //ObservableList Methods
+    //setAll(E...elements): Clears the ObservableList and adds all the elements passed as var-args (var-args = Variable Arguments or "variable number of arguments)
+    //var-args means that the number of arguments not known or set prior to calling the setAll() method
+
+
+    @FXML
+    public void handleKeyPressed(KeyEvent keyEvent) {
+        ToDoItem selectedItem = toDoListView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            if (keyEvent.getCode().equals(KeyCode.DELETE)) { //KeyCode.DELETE is just the code for the DELETE key
+                deleteItem(selectedItem);    //deleteItem() method was written down below in Controller
+            }
+        }
+    }
+
+    //the handleClickListView method is not used in the final program. It was replaced by the Change Listener code
+    //added above in the intialize() method, which does the same thing in a more generic way
+    @FXML
+    public void handleClickListView() {
+        ToDoItem item = toDoListView.getSelectionModel().getSelectedItem();
+        System.out.println("The selected item is " + item);
+        itemDetailsTextArea.setText(item.getDetails());
+        deadlineLabel.setText(item.getDeadLine().toString());
+//        StringBuilder sb = new StringBuilder(item.getDetails());
+//        sb.append("\n\n\n\n");
+//        sb.append("Due: ");
+//        sb.append(item.getDeadLine().t
+//         oString());
+//        itemDetailsTextArea.setText(sb.toString());
+//        itemDetailsTextArea.setText(item.getDetails());
+    }
+
+    public void deleteItem(ToDoItem item) {
+        //since we are deleting a ToDoItem, it makes sense to associate this action to the ListView within
+        //the CellFactory code (since the CellFactory code edits at the individual item level)
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete ToDo Item");
+        alert.setHeaderText("Delete Item" + item.getShortDescription());
+        alert.setContentText("Are you sure? Press OKAY to confirm or CANCEL to back out");
+        //we don't have to set buttons here because the Alert class will do that for us
+        Optional<ButtonType> result = alert.showAndWait();
+
+        //Optional: A container object which may or may not contain a non-null value. If a value is present, isPresent()
+        // returns true. If no value is present, the object is considered empty and isPresent() returns false.
+        //Optional is primarily intended for use as a method return type where there is a clear need to represent
+        // "no result," and where using null is likely to cause errors. A variable whose type is Optional should never
+        // itself be null; it should always point to an Optional instance.
+        if (result.isPresent() && (result.get() == ButtonType.OK)) {
+            ToDoData.getInstance().deleteToDoItem(item);
+        }
+    }
+}

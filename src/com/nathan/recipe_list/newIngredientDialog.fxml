@@ -1,0 +1,19 @@
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<DialogPane fx:controller="com.nathan.recipe_list.IngredientController"
+            xmlns:fx="http://javafx.com/fxml" prefHeight="250" prefWidth="250">
+    <headerText>
+        Add a new ingredient here
+    </headerText>
+    <content>
+        <VBox>
+            <Label text="Enter Ingredient Name"/>
+            <TextArea fx:id="ingredientName" prefHeight="20"/>
+
+            <Label text="Enter Ingredient Amount"/>
+            <TextArea fx:id="ingredientAmount" prefHeight="20"/>
+        </VBox>
+    </content>
+</DialogPane>

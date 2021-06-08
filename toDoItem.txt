@@ -1,0 +1,43 @@
+package com.nathan.todolist.datamodel;
+
+import java.time.LocalDate;
+
+public class ToDoItem {
+    private String shortDescription;
+    private String details;
+    private LocalDate deadLine;
+
+    public ToDoItem(String shortDescription, String details, LocalDate deadLine) {
+        this.shortDescription = shortDescription;
+        this.details = details;
+        this.deadLine = deadLine;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
+    public LocalDate getDeadLine() {
+        return deadLine;
+    }
+
+    public void setDeadLine(LocalDate deadLine) {
+        this.deadLine = deadLine;
+    }
+
+    public String getShortDescription() {
+        return shortDescription;
+    }
+
+    //by default the ListView displays the result of each item's toString method
+    //therefore, we need to override the toString method here if we don't want to see an object reference
+    //in the ListView pane on our GUI
+//    @Override
+//    public String toString() {
+//        return shortDescription;
+//    }
+    //This override is no longer needed once we have the cell factory code in place on Controller

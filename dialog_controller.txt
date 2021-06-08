@@ -1,0 +1,32 @@
+package com.nathan.todolist;
+
+import com.nathan.todolist.datamodel.ToDoItem;
+import javafx.fxml.FXML;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+
+import java.time.LocalDate;
+
+public class DialogController {
+
+    @FXML
+    private TextField shortDescriptionField;
+
+    @FXML
+    private TextArea detailsArea;
+
+    @FXML
+    private DatePicker deadlinePicker;
+
+    public ToDoItem processResults() {       //gather the user's input, create a new toDoItem and add it to our list in our toDoItem instance
+        String shortDescription = shortDescriptionField.getText().trim();   //the trim field gets rid of any extra spaces
+        String details  = detailsArea.getText().trim();
+        LocalDate deadlineValue = deadlinePicker.getValue();
+
+        ToDoItem newItem = new ToDoItem(shortDescription, details, deadlineValue);
+        ToDoData.getInstance().addToDoItem(newItem);   //recall that this is the Singleton we defined earlier //remember this is static variable so no need to instantiate
+        return newItem;
+
+    }
+}

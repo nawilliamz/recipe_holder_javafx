@@ -1,0 +1,116 @@
+package com.nathan.todolist;
+
+import com.nathan.todolist.datamodel.ToDoItem;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
+
+//because this class is a singleton, whenever any part of our application want to access the
+//data, it has to call ToDoData.getinstance.getToDoItems, because (of course) we've set out constructor
+//to be a private one, meaning you can't instantiate a new object from this class by any other means
+
+public class ToDoData {
+
+    private static ToDoData instance = new ToDoData();
+    private static String fileName = "ToDoListItems.txt";
+
+    private ObservableList<ToDoItem> toDoItems;
+    private DateTimeFormatter formatter;
+
+    public static ToDoData getInstance() {   //Note: instance is a new instance of ToDoItems
+        return instance;
+    }
+    //Note how this getInstance method is a static method. This allows us to call it using the
+    //ToDoData class in Main.java without having to create a new instance (which is the whole
+    //point of using a Singleton)
+
+    //this is a private Constructor. this is the first I've seen of this (used for Singleton technique)
+    private ToDoData() {
+        formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+    }
+
+    public void addToDoItem (ToDoItem item) {
+        toDoItems.add(item);
+
+    }
+    public ObservableList<ToDoItem> getToDoItems() {
+        return toDoItems;
+
+    }
+
+//    public void setToDoItems(List<ToDoItem> toDoItems) {
+//        this.toDoItems = toDoItems;
+//    }
+    //the setToDoItems method is temporary. We only needed it so the Controller could store the
+    //hardcoded items. We can now comment this out since we don't need. This
+    //action is being doe by the setAll() method called in the initialize() method in Controller
+
+    //the loadToDoItems method reads the ToDoItems from a file
+    public void loadToDoItems() throws IOException {
+        toDoItems = FXCollections.observableArrayList();
+        Path path = Paths.get(fileName);    //class Paths consists entirely of static methods that return a path by converting a path String or URI
+        BufferedReader br = Files.newBufferedReader(path);   //Files consists exclusively of static methods that operate on files, directories, or other file types
+
+        String input;
+        try {
+            while ((input = br.readLine()) != null) {
+                String[] itemPieces = input.split("\t");
+
+                String shortDescription = itemPieces[0];
+                String details = itemPieces[1];
+                String dateString = itemPieces[2];
+
+                LocalDate date = LocalDate.parse(dateString, formatter);
+                ToDoItem toDoItem = new ToDoItem(shortDescription, details, date);
+                toDoItems.add(toDoItem);
+                //In a real app, these String items would normally be stored as XML or, more likely,
+                //in a database. Using a text file for a lg amt of records soon becomes impractical
+                //the load method retrieves the input from a file and saves it in to the toDoItems list
+            }
+
+        } finally {
+            if(br != null) {
+                br.close();
+            }
+        }
+    }
+
+    //the storeToDoItems method writes the ToDoItems to a file
+    public void storeToDoItems () throws IOException {
+        Path path = Paths.get(fileName);
+        BufferedWriter bw = Files.newBufferedWriter(path);
+
+        try {     //iterate through the list of items and save them one at a time
+
+            Iterator<ToDoItem> iter = toDoItems.iterator();
+            while (iter.hasNext()) {
+
+                ToDoItem item = iter.next();
+                bw.write(String.format("%s\t%s\t%s",
+                        item.getShortDescription(),
+                        item.getDetails(),
+                        item.getDeadLine().format(formatter)));
+                bw.newLine();  //basically adds a new line to the text file
+            }
+
+        } finally {
+            if (bw != null) {
+                bw.close();  //close it to avoid an exception
+            }
+        }
+    }
+    public void deleteToDoItem (ToDoItem item) {
+        toDoItems.remove(item);
+    }
+
+}

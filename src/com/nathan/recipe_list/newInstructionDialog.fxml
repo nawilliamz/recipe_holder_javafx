@@ -1,0 +1,19 @@
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.DialogPane?>
+<DialogPane fx:controller="com.nathan.recipe_list.InstructionController"
+            xmlns:fx="http://javafx.com/fxml" prefHeight="250" prefWidth="250">
+    <headerText>
+        Add a new instructions here
+    </headerText>
+    <content>
+        <VBox>
+            <Label text="Step #:"/>
+            <TextArea fx:id="stepNumber" prefHeight="20"/>
+
+            <Label text="Enter Step Detail:"/>
+            <TextArea fx:id="stepInstruction" prefHeight="20"/>
+        </VBox>
+    </content>
+</DialogPane>

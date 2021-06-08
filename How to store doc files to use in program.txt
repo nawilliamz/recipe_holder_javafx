@@ -1,0 +1,6 @@
+
+
+Check for available space in your local Storage.
+Save the PDF(you can save it to your customized folder for better access)
+fetch the path of PDF
+Store the path in SQLite

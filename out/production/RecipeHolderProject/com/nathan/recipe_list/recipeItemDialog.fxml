@@ -1,0 +1,47 @@
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Separator?>
+<DialogPane fx:controller="com.nathan.recipe_list.RecipeController"
+            xmlns:fx="http://javafx.com/fxml" prefHeight="425" prefWidth="500">
+
+    <headerText>
+        Add new recipe item
+    </headerText>
+    <content>
+        <VBox>
+
+            <Label text="RecipeTitle: " />
+            <TextArea fx:id="recipeTitle"/>
+            <Separator prefHeight="25"/>
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Ingredients: "/>
+                <Button fx:id="addIngredient" text="+" onMouseClicked="#showNewIngredientDialog" alignment="CENTER_RIGHT" prefHeight="15"
+                 prefWidth="25"/>
+            </HBox>
+            <HBox>
+                <TextArea fx:id="ingredientName"/>
+            </HBox>
+            <Separator prefHeight="25"/>
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Instructions: "/>
+                <Button fx:id="addInstruction" text="+" onMouseClicked="#showNewInstructionDialog" alignment="CENTER_RIGHT" prefHeight="15"
+                        prefWidth="25"/>
+            </HBox>
+            <HBox>
+                <TextArea fx:id="instructionList"/>
+            </HBox>
+        </VBox>
+
+    </content>
+
+
+</DialogPane>
